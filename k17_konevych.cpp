@@ -13,14 +13,14 @@
 
 //---------------------------------------------------------------------------//
 #define LEARNING_SPEED 0.00001 // explored by experimentation
-#define LEARNING_ITERATIONS 500 // just enough
+#define LEARNING_ITERATIONS 500 // just enough, learns fast :)
 
 //---------------------------------------------------------------------------//
 enum class error_processing{
     flexible,   // communicates with the user if input data is incorrect
 
     strict      // throws an exception if input data is incorrect
-                // was used for testing by reading data from a file
+                // was used for testing by reading realty data from a file
 };
 
 //---------------------------------------------------------------------------//
@@ -44,9 +44,9 @@ void   read_features_to_predict(std::istream&,
                                 std::vector<double>&,
                                 error_processing);
 
-// the studying part's methods
+// methods related to the model learning
 double predict(const std::pair<std::vector<double>, double>&,
-               std::vector<double>);
+               const std::vector<double>&);
 
 std::pair<std::vector<double>, double> init_weights(unsigned);
 void   train(std::pair<std::vector<double>, double>&,    // weights
@@ -55,10 +55,12 @@ void   train(std::pair<std::vector<double>, double>&,    // weights
              double,                                     // learning speed
              unsigned);                                  // iterations
 
+void run_predictions(const std::pair<std::vector<double>, double>&);
+
+// some operations that will be needed while working with linear regression
 std::vector<double> dot(                                 // multiplication
         const std::vector<std::vector<double>>&,         // of the matrix
         const std::vector<double>&);                     // and the vector-column
-
 std::vector<double> add_num_to_vec(std::vector<double>, double);
 std::vector<double> add_vectors(std::vector<double>,
                                 std::vector<double>);
@@ -67,18 +69,17 @@ std::vector<double> vec_of_ones(unsigned);
 std::vector<std::vector<double>> transpose(std::vector<std::vector<double>>);
 double              sum_vector(std::vector<double>);
 
+
 //---------------------------------------------------------------------------//
 
 int main()
 {
-    std::fstream test_file("/Users/makskonevych/Documents/Cpp/test_prog5/test_.txt");
-
     std::vector<std::vector<double>> params_matrix;
     std::vector<double> prices_vector;
     try{
-        read_from_stream(test_file,params_matrix,
-                         prices_vector,error_processing::strict);
-
+        read_from_stream(std::cin,params_matrix,
+                         prices_vector,error_processing::flexible);
+        if(prices_vector.size()==0) return 0;
         std::pair<std::vector<double>, double> weights;
         weights = init_weights(params_matrix[0].size());
         train(weights,
@@ -86,18 +87,12 @@ int main()
               prices_vector,
               LEARNING_SPEED,
               LEARNING_ITERATIONS);
-        while(true){
-            std::cout << "\n\n________________\n";
-            std::vector<double> features_to_predict;
-            read_features_to_predict(std::cin,
-                                     features_to_predict,
-                                     error_processing::flexible);
-            std::cout << "\nIt will cost around "
-                << predict(weights,features_to_predict)
-                << ".";
-        }
+
+        run_predictions(weights); // inf prediction loop
     }
     catch(std::string err) {
+        // comes here only if error_processing::strict is set
+        // useful while reading training data from file
         std::cout <<"\nError:\n\t"<< err;
     }
     return 0;
@@ -257,8 +252,9 @@ void read_from_stream(std::istream& is,
                       error_processing er_proc)
 {
     std::cout<<"Enter the information about the realty.\n"
-               "To end entering 'learning data' put 0 in area.\n";
+               "To start prediction put 0 into area.\n";
     while(true){
+        std::cout << "\n>>>\n";
         double area = read_area(is, er_proc);
         if(area==0||is.eof()) break;
         params_matrix.emplace_back(std::vector<double>(
@@ -286,7 +282,7 @@ void read_features_to_predict(std::istream& is,
 //---------------------------------------------------------------------------//
 
 double predict(const std::pair<std::vector<double>, double>& weights,
-               const std::vector<double> features){
+               const std::vector<double>& features){
     double result = 0;
     for(int i=0; i<features.size(); ++i) result+=features[i]*weights.first[i];
     return result+weights.second;
@@ -334,6 +330,19 @@ void train(std::pair<std::vector<double>, double>& weights,
         // applying the gradients
         weights.first = add_vectors(weights.first, mul_vec_num(dMdW,-speed));
         weights.second-=dMdB*speed;
+    }
+}
+
+void run_predictions(const std::pair<std::vector<double>, double>& weights) {
+    while (true) {
+        std::cout << "\n\n________________\n";
+        std::vector<double> features_to_predict;
+        read_features_to_predict(std::cin,
+                                 features_to_predict,
+                                 error_processing::flexible);
+        std::cout << "\nIt will cost around "
+                  << predict(weights, features_to_predict)
+                  << ".";
     }
 }
 
