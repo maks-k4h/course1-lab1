@@ -1,0 +1,18 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/Users/makskonevych/Documents/Cpp/test_prog5/UzVar-lib/UzVar.cpp
+UzVar.hpp
+/Users/makskonevych/Documents/Cpp/test_prog5/UzVar-lib/UzVar.hpp
+string
+-
+
+/Users/makskonevych/Documents/Cpp/test_prog5/UzVar-lib/UzVar.hpp
+string
+-
+
